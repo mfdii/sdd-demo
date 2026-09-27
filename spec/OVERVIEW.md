@@ -36,7 +36,8 @@ Follow these steps in order. Do not skip steps.
 ### Step 1: Scaffold and Rename
 
 ```bash
-# Copy the template to a new project directory
+# Copy the template to a new project directory IN the current working directory
+# Do not hardcode or guess absolute paths — always use relative paths from $PWD
 cp -r mcp-v2-template/ <your-server-name>
 
 # IMPORTANT: cd into the new directory BEFORE running rename.sh
