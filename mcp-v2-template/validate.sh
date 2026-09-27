@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 echo "=== SDD Conformance Validation ==="
 PASS=0
@@ -41,7 +40,19 @@ check "Security context in deploy"  "grep -q 'runAsNonRoot: true' k8s/deployment
 check "Drop ALL caps in deploy"     "grep -q 'drop:' k8s/deployment.yaml"
 
 echo ""
+echo "--- Customization ---"
+check "App renamed from template"    "! grep -Fq mcp-hello-world package.json"
+check "No hello tool in server.ts"   "! grep -Fq \"registerTool('hello'\" src/server.ts"
+check "Custom tool registered"       "grep -Fq registerTool src/server.ts"
+check "withMetrics wraps tool"       "grep -Fq withMetrics src/server.ts"
+check "Description updated"          "! grep -Fq 'Hello world MCP v2 server' package.json"
+check "No template refs in source"   "! grep -rFq mcp-hello-world src/"
+check "No template refs in k8s"      "! grep -rFq mcp-hello-world k8s/"
+
+echo ""
 echo "--- Endpoints ---"
+lsof -ti:8080 2>/dev/null | xargs kill -9 2>/dev/null || true
+sleep 1
 npm start &
 SERVER_PID=$!
 sleep 2
@@ -50,9 +61,10 @@ check "Health endpoint"              "curl -sf http://localhost:8080/health | gr
 check "Ready endpoint"               "curl -sf http://localhost:8080/ready | grep -q 'ready'"
 check "Metrics endpoint"             "curl -sf http://localhost:8080/metrics | grep -q 'mcp_server_info'"
 check "MCP tool call returns result" "curl -sf -X POST http://localhost:8080/mcp -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}' | grep -q 'result'"
+check "No hello tool in live server" "! curl -sf -X POST http://localhost:8080/mcp -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}' | grep -q '\"name\":\"hello\"'"
 
 kill $SERVER_PID 2>/dev/null
-wait $SERVER_PID 2>/dev/null
+wait $SERVER_PID 2>/dev/null || true
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

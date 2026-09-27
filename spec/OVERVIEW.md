@@ -16,6 +16,7 @@ This is a Spec Driven Development (SDD) specification suite for building MCP v2 
 | [SECURITY.md](SECURITY.md) | Zero-CVE mandate, approved dependencies, container hardening |
 | [OBSERVABILITY.md](OBSERVABILITY.md) | Prometheus metrics, ServiceMonitor, Perses dashboards |
 | [TESTING.md](TESTING.md) | k6 load testing scenarios and thresholds |
+| [ENVIRONMENT.md](ENVIRONMENT.md) | Dev environment, shell commands, file editing strategy |
 
 ## Versioning
 
@@ -32,44 +33,24 @@ This is a Spec Driven Development (SDD) specification suite for building MCP v2 
 
 Follow these steps in order. Do not skip steps.
 
-### Step 1: Scaffold from Template
+### Step 1: Scaffold and Rename
 
 ```bash
 # Copy the template to a new project directory
-cp -r mcp-v2-template/ ~/dev/<your-server-name>
-cd ~/dev/<your-server-name>
+cp -r mcp-v2-template/ <your-server-name>
+cd <your-server-name>
 
-# Initialize git
-git init
+# Rename all references (handles all files, excludes node_modules/dist/.git)
+bash rename.sh <your-server-name> '<your description>'
+# Example: bash rename.sh mcp-weather 'MCP server for weather data'
 ```
 
-### Step 2: Rename the Server
+The `rename.sh` script replaces `mcp-hello-world` in all source, config, and k8s files. It also updates the description and display name. **Always use this script — do not manually find-and-replace.**
 
-The template ships as a working `mcp-hello-world` server. Rename it to your server by searching and replacing these values across the entire project:
-
-| Find | Replace With | Example |
-|------|-------------|---------|
-| `mcp-hello-world` | Your server's kebab-case name | `weather-mcp` |
-| `Hello world MCP v2 server` | One-line description | `MCP server for weather data` |
-| `MCP Hello World` | Human-readable display name | `Weather MCP` |
-| `https://github.com/your-org/mcp-hello-world.git` | Your GitHub repo HTTPS URL | `https://github.com/org/weather-mcp.git` |
-
-Files that need renaming:
-- `package.json` — name, description
-- `src/server.ts` — service name in health/ready responses, McpServer name
-- `src/metrics.ts` — server name in `mcp_server_info` gauge
-- `k8s/deployment.yaml` — all resource names, labels, container name, image trigger
-- `k8s/service.yaml` — name, labels, selector
-- `k8s/route.yaml` — name, labels, service reference
-- `k8s/imagestream.yaml` — name, labels
-- `k8s/buildconfig.yaml` — name, labels, output, git URI
-- `k8s/servicemonitor.yaml` — name, labels, selector
-- `k8s/dashboard.yaml` — name, display name, all PromQL `job=` labels
-- `k6/load-test.js` — route comment, tool payloads (replace hello tool with your tools)
-
-### Step 3: Install Dependencies
+After renaming, reinstall dependencies (the old package-lock.json references the old name):
 
 ```bash
+rm -rf node_modules package-lock.json
 npm install
 ```
 
@@ -81,9 +62,9 @@ npm audit
 
 If any critical or high vulnerabilities are reported, resolve them before proceeding. See [SECURITY.md](SECURITY.md).
 
-### Step 4: Implement Your Tools
+### Step 2: Implement Your Tools
 
-Edit `src/server.ts`. Remove the example `hello` tool and register your own tools following the pattern in [IMPLEMENTATION.md](IMPLEMENTATION.md):
+Edit `src/server.ts`. **Rewrite the entire file** — do not try to patch it. Keep all the imports, helpers (`log`, `toolResult`, `toolError`), Express app setup, and SIGTERM handler. Replace only the `hello` tool registration with your own tools following the pattern in [IMPLEMENTATION.md](IMPLEMENTATION.md). See [ENVIRONMENT.md](ENVIRONMENT.md) for the recommended file editing strategy.
 
 ```typescript
 server.registerTool('your-tool-name', {
@@ -105,7 +86,7 @@ server.registerTool('your-tool-name', {
 
 For servers with many tools, extract handlers into `src/tools/` — see IMPLEMENTATION.md for the pattern.
 
-### Step 5: Build and Test Locally
+### Step 3: Build and Validate
 
 ```bash
 npm run build          # Must produce zero TypeScript errors
@@ -117,7 +98,7 @@ Run the conformance validation script (20 automated checks):
 bash validate.sh
 ```
 
-This checks: TypeScript compilation, zero CVEs, file structure (Containerfile, k8s manifests, k6 tests), security (no prohibited deps, no eval/exec, security context in deployment), and endpoint verification (health, ready, metrics, MCP tool call). All 20 checks must pass.
+This checks: TypeScript compilation, zero CVEs, file structure, security, customization (hello tool removed, app renamed), and endpoint verification. All checks must pass. If any fail, fix the issue and re-run `bash validate.sh`.
 
 If you need to test manually:
 
@@ -138,17 +119,17 @@ curl -X POST http://localhost:8080/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"your-tool-name","arguments":{"param1":"test"}}}'
 ```
 
-### Step 6: Write k6 Load Tests
+### Step 4: Write k6 Load Tests
 
 Edit `k6/load-test.js`. Replace the example tool payloads with your tools. See [TESTING.md](TESTING.md) for the full pattern.
 
-### Step 7: Create GitHub Repository
+### Step 5: Create GitHub Repository
 
 ```bash
 gh repo create org/<your-server-name> --private --source=. --push
 ```
 
-### Step 8: Deploy to OpenShift
+### Step 6: Deploy to OpenShift
 
 Create the OCP resources in your target namespace:
 
@@ -175,7 +156,7 @@ oc apply -f k8s/servicemonitor.yaml -n $NAMESPACE
 oc apply -f k8s/dashboard.yaml -n openshift-cluster-observability-operator
 ```
 
-### Step 9: Verify Deployment
+### Step 7: Verify Deployment
 
 ```bash
 # Check pod is running
@@ -200,7 +181,7 @@ curl -X POST https://$ROUTE/mcp \
 k6 run --env BASE_URL=https://$ROUTE k6/load-test.js
 ```
 
-### Step 10: Commit and Iterate
+### Step 8: Commit and Iterate
 
 ```bash
 git add -A
@@ -226,10 +207,12 @@ sdd_demo/
 │   ├── INFRASTRUCTURE.md    # OpenShift, Containerfile, k8s manifests
 │   ├── SECURITY.md          # Zero-CVE mandate, approved dependencies
 │   ├── OBSERVABILITY.md     # Metrics, ServiceMonitor, dashboards
-│   └── TESTING.md           # k6 load testing
+│   ├── TESTING.md           # k6 load testing
+│   └── ENVIRONMENT.md       # Dev environment, shell, file editing
 └── mcp-v2-template/         # Reference implementation (copy to start)
     ├── Containerfile
-    ├── validate.sh          # Conformance validation (20 checks)
+    ├── rename.sh            # Renames template to your app (run first)
+    ├── validate.sh          # Conformance validation (26 checks)
     ├── package.json
     ├── tsconfig.json
     ├── src/

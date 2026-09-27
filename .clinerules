@@ -6,10 +6,20 @@ You are building MCP v2 servers for an enterprise OpenShift platform. Every impl
 
 Follow this workflow for every task:
 
-1. **Read the spec** — Before writing any code, read `spec/OVERVIEW.md` then the relevant spec file (ARCHITECTURE, IMPLEMENTATION, INFRASTRUCTURE, SECURITY, OBSERVABILITY, or TESTING). Do not skip this step.
-2. **Plan** — State what you will implement and which spec sections govern it. If the spec doesn't cover your situation, ask the user — do not improvise.
-3. **Implement** — Write code that matches the patterns in `mcp-v2-template/` and the code examples in `spec/IMPLEMENTATION.md`. Copy patterns exactly.
-4. **Validate** — Run `bash validate.sh` to check conformance (20 automated checks covering build, structure, security, and endpoints). All checks must pass. If `validate.sh` is not present, copy it from the template.
+1. **Read the specs** — Before writing any code, read `spec/OVERVIEW.md`, `spec/ENVIRONMENT.md`, then the relevant spec file (ARCHITECTURE, IMPLEMENTATION, INFRASTRUCTURE, SECURITY, OBSERVABILITY, or TESTING). Do not skip this step.
+2. **Scaffold** — Copy `mcp-v2-template/` and run `bash rename.sh <name> '<description>'` to rename. Then `rm -rf node_modules package-lock.json && npm install`. Do not manually find-and-replace — the script handles it.
+3. **Implement** — Rewrite `src/server.ts` with your tools. Write the entire file — do not patch or diff. Keep all imports, helpers, Express setup, and SIGTERM handler from the template. Replace only the tool registration block.
+4. **Validate** — Run `bash validate.sh`. All checks must pass. If any fail, fix and re-run. Do not proceed until all checks pass.
+
+## Shell Rules
+
+Read `spec/ENVIRONMENT.md` before running any shell commands. Key rules:
+
+- **Never use `sed`** — use `perl -pi -e` for in-place text replacement (macOS `sed -i` is broken without `''`)
+- **Always exclude `node_modules/`, `dist/`, `.git/`, `package-lock.json`** from find, grep, and replace operations
+- **Use `npm run build`** not `npx tsc`
+- **Kill port 8080** before starting a server: `lsof -ti:8080 | xargs kill -9 2>/dev/null`
+- **Write full files** — when modifying `src/server.ts`, rewrite the entire file using a heredoc. Do not use patch/diff formats.
 
 ## Hard Rules
 
@@ -34,7 +44,9 @@ Follow this workflow for every task:
 
 ## Reference Implementation
 
-The `mcp-v2-template/` directory contains a working reference server. When in doubt, match its patterns exactly. The template includes:
+The `mcp-v2-template/` directory contains a working hello-world MCP server. When in doubt, match its patterns exactly. The template includes:
+- `rename.sh` — Renames template to your app name (run first, always)
+- `validate.sh` — Conformance validation (run last, must pass)
 - `src/server.ts` — MCP handler, Express app, tool registration
 - `src/metrics.ts` — Prometheus instrumentation
 - `Containerfile` — 3-stage build
