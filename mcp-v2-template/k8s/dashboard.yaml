@@ -1,0 +1,381 @@
+---
+apiVersion: perses.dev/v1alpha2
+kind: PersesDashboard
+metadata:
+  name: mcp-hello-world
+  labels:
+    app.kubernetes.io/name: mcp-dashboards
+spec:
+  config:
+    display:
+      description: mcp-hello-world MCP server tool calls, HTTP traffic, and resource usage
+      name: MCP Hello World
+    duration: 1h
+    layouts:
+    - kind: Grid
+      spec:
+        display:
+          collapse:
+            open: true
+          title: Overview
+        items:
+        - content:
+            $ref: '#/spec/panels/toolCalls'
+          height: 5
+          width: 6
+          x: 0
+          "y": 0
+        - content:
+            $ref: '#/spec/panels/errorRate'
+          height: 5
+          width: 6
+          x: 6
+          "y": 0
+        - content:
+            $ref: '#/spec/panels/avgDuration'
+          height: 5
+          width: 6
+          x: 12
+          "y": 0
+        - content:
+            $ref: '#/spec/panels/httpReqRate'
+          height: 5
+          width: 6
+          x: 18
+          "y": 0
+    - kind: Grid
+      spec:
+        display:
+          collapse:
+            open: true
+          title: Tool Metrics
+        items:
+        - content:
+            $ref: '#/spec/panels/toolCallRate'
+          height: 10
+          width: 8
+          x: 0
+          "y": 0
+        - content:
+            $ref: '#/spec/panels/toolErrors'
+          height: 10
+          width: 8
+          x: 8
+          "y": 0
+        - content:
+            $ref: '#/spec/panels/toolDurationP95'
+          height: 10
+          width: 8
+          x: 16
+          "y": 0
+    - kind: Grid
+      spec:
+        display:
+          collapse:
+            open: true
+          title: HTTP Metrics
+        items:
+        - content:
+            $ref: '#/spec/panels/httpRequestRate'
+          height: 10
+          width: 12
+          x: 0
+          "y": 0
+        - content:
+            $ref: '#/spec/panels/httpDurationP95'
+          height: 10
+          width: 12
+          x: 12
+          "y": 0
+    - kind: Grid
+      spec:
+        display:
+          collapse:
+            open: true
+          title: Resources
+        items:
+        - content:
+            $ref: '#/spec/panels/memoryUsage'
+          height: 10
+          width: 12
+          x: 0
+          "y": 0
+        - content:
+            $ref: '#/spec/panels/cpuUsage'
+          height: 10
+          width: 12
+          x: 12
+          "y": 0
+    panels:
+      toolCalls:
+        kind: Panel
+        spec:
+          display:
+            description: Total tool invocations in the last hour
+            name: Tool Calls (1h)
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last
+              format:
+                shortValues: true
+                unit: decimal
+              sparkline: {}
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: sum(increase(mcp_tool_calls_total{job="mcp-hello-world"}[1h]))
+      errorRate:
+        kind: Panel
+        spec:
+          display:
+            description: Percentage of tool calls resulting in errors
+            name: Error Rate
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last
+              format:
+                unit: percent
+              sparkline: {}
+              thresholds:
+                steps:
+                - color: green
+                  value: 0
+                - color: yellow
+                  value: 1
+                - color: red
+                  value: 5
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: sum(rate(mcp_tool_calls_total{job="mcp-hello-world",status="error"}[5m])) / sum(rate(mcp_tool_calls_total{job="mcp-hello-world"}[5m])) * 100
+      avgDuration:
+        kind: Panel
+        spec:
+          display:
+            description: Average tool execution duration
+            name: Avg Duration
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last
+              format:
+                decimalPlaces: 2
+                unit: seconds
+              sparkline: {}
+              thresholds:
+                steps:
+                - color: green
+                  value: 0
+                - color: yellow
+                  value: 1
+                - color: red
+                  value: 5
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: sum(rate(mcp_tool_duration_seconds_sum{job="mcp-hello-world"}[5m])) / sum(rate(mcp_tool_duration_seconds_count{job="mcp-hello-world"}[5m]))
+      httpReqRate:
+        kind: Panel
+        spec:
+          display:
+            description: HTTP requests per second
+            name: HTTP Req/s
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last
+              format:
+                decimalPlaces: 2
+                unit: decimal
+              sparkline: {}
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: sum(rate(http_requests_total{job="mcp-hello-world"}[5m]))
+      toolCallRate:
+        kind: Panel
+        spec:
+          display:
+            description: Rate of tool invocations per second by tool name
+            name: Tool Call Rate
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                label: calls/s
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: sum(rate(mcp_tool_calls_total{job="mcp-hello-world"}[5m])) by (tool)
+                  seriesNameFormat: '{{tool}}'
+      toolErrors:
+        kind: Panel
+        spec:
+          display:
+            description: Rate of tool errors per second by tool name
+            name: Tool Errors
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                label: errors/s
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: sum(rate(mcp_tool_calls_total{job="mcp-hello-world",status="error"}[5m])) by (tool)
+                  seriesNameFormat: '{{tool}}'
+      toolDurationP95:
+        kind: Panel
+        spec:
+          display:
+            description: 95th percentile tool execution duration
+            name: Tool Duration p95
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                label: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: histogram_quantile(0.95, sum(rate(mcp_tool_duration_seconds_bucket{job="mcp-hello-world"}[5m])) by (tool, le))
+                  seriesNameFormat: '{{tool}}'
+      httpRequestRate:
+        kind: Panel
+        spec:
+          display:
+            description: HTTP request rate by path
+            name: HTTP Request Rate
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                label: req/s
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: sum(rate(http_requests_total{job="mcp-hello-world"}[5m])) by (path)
+                  seriesNameFormat: '{{path}}'
+      httpDurationP95:
+        kind: Panel
+        spec:
+          display:
+            description: 95th percentile HTTP request duration by path
+            name: HTTP Duration p95
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                label: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="mcp-hello-world"}[5m])) by (path, le))
+                  seriesNameFormat: '{{path}}'
+      memoryUsage:
+        kind: Panel
+        spec:
+          display:
+            description: Process memory usage
+            name: Memory Usage
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                label: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: process_resident_memory_bytes{job="mcp-hello-world"}
+                  seriesNameFormat: RSS
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: nodejs_heap_size_used_bytes{job="mcp-hello-world"}
+                  seriesNameFormat: Heap Used
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: nodejs_heap_size_total_bytes{job="mcp-hello-world"}
+                  seriesNameFormat: Heap Total
+      cpuUsage:
+        kind: Panel
+        spec:
+          display:
+            description: CPU usage in cores
+            name: CPU Usage
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                label: cores
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                  query: rate(process_cpu_seconds_total{job="mcp-hello-world"}[5m])
+                  seriesNameFormat: CPU

@@ -1,0 +1,23 @@
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: mcp-hello-world
+  labels:
+    app: mcp-hello-world
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: mcp-hello-world:latest
+  source:
+    type: Git
+    git:
+      uri: https://github.com/your-org/mcp-hello-world.git
+      ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Containerfile
+  triggers:
+  - type: ConfigChange
