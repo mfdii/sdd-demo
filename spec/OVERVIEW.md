@@ -38,6 +38,8 @@ Follow these steps in order. Do not skip steps.
 ```bash
 # Copy the template to a new project directory
 cp -r mcp-v2-template/ <your-server-name>
+
+# IMPORTANT: cd into the new directory BEFORE running rename.sh
 cd <your-server-name>
 
 # Rename all references (handles all files, excludes node_modules/dist/.git)
@@ -45,7 +47,7 @@ bash rename.sh <your-server-name> '<your description>'
 # Example: bash rename.sh mcp-weather 'MCP server for weather data'
 ```
 
-The `rename.sh` script replaces `mcp-hello-world` in all source, config, and k8s files. It also updates the description and display name. **Always use this script — do not manually find-and-replace.**
+**CRITICAL: You must `cd` into the new project directory before running `rename.sh`.** The script uses `find .` to locate files. If you run it from a parent directory, it will corrupt other projects. The script will refuse to run if `package.json` is not in the current directory.
 
 After renaming, reinstall dependencies (the old package-lock.json references the old name):
 

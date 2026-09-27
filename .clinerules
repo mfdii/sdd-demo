@@ -7,7 +7,7 @@ You are building MCP v2 servers for an enterprise OpenShift platform. Every impl
 Follow this workflow for every task:
 
 1. **Read the specs** — Before writing any code, read `spec/OVERVIEW.md`, `spec/ENVIRONMENT.md`, then the relevant spec file (ARCHITECTURE, IMPLEMENTATION, INFRASTRUCTURE, SECURITY, OBSERVABILITY, or TESTING). Do not skip this step.
-2. **Scaffold** — Copy `mcp-v2-template/` and run `bash rename.sh <name> '<description>'` to rename. Then `rm -rf node_modules package-lock.json && npm install`. Do not manually find-and-replace — the script handles it.
+2. **Scaffold** — Copy `mcp-v2-template/` to a new directory, then `cd` into it, then run `bash rename.sh <name> '<description>'`. You MUST `cd` into the new directory first — the script refuses to run otherwise. Then `rm -rf node_modules package-lock.json && npm install`. Do not manually find-and-replace — the script handles it.
 3. **Implement** — Rewrite `src/server.ts` with your tools. Write the entire file — do not patch or diff. Keep all imports, helpers, Express setup, and SIGTERM handler from the template. Replace only the tool registration block.
 4. **Validate** — Run `bash validate.sh`. All checks must pass. If any fail, fix and re-run. Do not proceed until all checks pass.
 

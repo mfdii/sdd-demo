@@ -112,10 +112,12 @@ The template includes two scripts that automate error-prone steps:
 
 | Script | Purpose | When to use |
 |--------|---------|-------------|
-| `rename.sh` | Replaces `mcp-hello-world` with your app name across all source and config files | Step 2 of the workflow (immediately after copying the template) |
-| `validate.sh` | Runs 20+ conformance checks (build, structure, security, endpoints) | Step 5 of the workflow (after implementing tools) |
+| `rename.sh` | Replaces `mcp-hello-world` with your app name across all source and config files | Step 1 of the workflow (immediately after copying the template) |
+| `validate.sh` | Runs 28 conformance checks (build, structure, security, customization, endpoints) | Step 3 of the workflow (after implementing tools) |
 
 Always use these scripts rather than running the steps manually.
+
+**CRITICAL:** You must `cd` into the project directory before running `rename.sh`. The script uses `find .` relative to the current directory. Running it from a parent directory will corrupt sibling projects. The script checks for `package.json` and refuses to run if it is not in the current directory.
 
 ## Port Conflicts
 

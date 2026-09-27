@@ -1,9 +1,16 @@
 #!/bin/bash
 set -e
 
+# Must be run from inside the project directory (where package.json lives)
+if [ ! -f "package.json" ] || [ ! -f "src/server.ts" ]; then
+  echo "ERROR: rename.sh must be run from inside the project directory."
+  echo "  cd <your-project> && bash rename.sh <app-name> '<description>'"
+  exit 1
+fi
+
 if [ -z "$1" ] || [ -z "$2" ]; then
-  echo "Usage: bash rename.sh <app-name> <app-description>"
-  echo "Example: bash rename.sh mcp-weather 'MCP server for weather data'"
+  echo "Usage: cd <your-project> && bash rename.sh <app-name> <app-description>"
+  echo "Example: cd mcp-weather && bash rename.sh mcp-weather 'MCP server for weather data'"
   exit 1
 fi
 
