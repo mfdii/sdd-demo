@@ -66,7 +66,7 @@ If any critical or high vulnerabilities are reported, resolve them before procee
 
 ### Step 2: Implement Your Tools
 
-Edit `src/server.ts`. **Rewrite the entire file** — do not try to patch it. Keep all the imports, helpers (`log`, `toolResult`, `toolError`), Express app setup, and SIGTERM handler. Replace only the `hello` tool registration with your own tools following the pattern in [IMPLEMENTATION.md](IMPLEMENTATION.md). See [ENVIRONMENT.md](ENVIRONMENT.md) for the recommended file editing strategy.
+Edit `src/server.ts`. **Rewrite the entire file** using `write_to_file` — do not try to patch it, and **never use heredocs** (`cat << EOF`) which are garbled by terminal shell integration. Keep all the imports, helpers (`log`, `toolResult`, `toolError`), Express app setup, and SIGTERM handler. Replace only the `hello` tool registration with your own tools following the pattern in [IMPLEMENTATION.md](IMPLEMENTATION.md). See [ENVIRONMENT.md](ENVIRONMENT.md) for the recommended file editing strategy.
 
 ```typescript
 server.registerTool('your-tool-name', {

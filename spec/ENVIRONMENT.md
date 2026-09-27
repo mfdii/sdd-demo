@@ -79,12 +79,7 @@ npm audit
 
 When modifying source files, follow this priority:
 
-1. **Full file rewrite** — When replacing a tool implementation or making structural changes to `server.ts`, write the entire file. This is the most reliable approach. Use a heredoc:
-   ```bash
-   cat > src/server.ts << 'ENDOFFILE'
-   ... entire file content ...
-   ENDOFFILE
-   ```
+1. **Full file rewrite via `write_to_file`** — When replacing a tool implementation or making structural changes to `server.ts`, use Cline's native `write_to_file` tool to write the entire file. This is the most reliable approach. **Do NOT use heredocs (`cat << EOF`) in the terminal** — Cline's shell integration garbles multi-line heredocs, producing corrupted files.
 
 2. **Targeted perl replacement** — For simple find-and-replace across multiple files (like renaming the app):
    ```bash
@@ -92,6 +87,8 @@ When modifying source files, follow this priority:
    ```
 
 3. **Never use patch/diff formats** — They are fragile and fail when context lines don't match exactly. Always prefer full file rewrites or targeted replacements.
+
+4. **Never use heredocs** — `cat > file << 'EOF'` and `cat > file << EOF` both fail in this environment due to terminal shell integration issues. The output is garbled and will corrupt your files. Always use `write_to_file` instead.
 
 ## Directory Exclusions
 

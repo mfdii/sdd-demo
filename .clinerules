@@ -19,7 +19,7 @@ Read `spec/ENVIRONMENT.md` before running any shell commands. Key rules:
 - **Always exclude `node_modules/`, `dist/`, `.git/`, `package-lock.json`** from find, grep, and replace operations
 - **Use `npm run build`** not `npx tsc`
 - **Kill port 8080** before starting a server: `lsof -ti:8080 | xargs kill -9 2>/dev/null`
-- **Write full files** — when modifying `src/server.ts`, rewrite the entire file using a heredoc. Do not use patch/diff formats.
+- **Write full files** — when modifying `src/server.ts`, rewrite the entire file using `write_to_file`. **Never use heredocs** (`cat << EOF`) — they are garbled by terminal shell integration. Use Cline's native `write_to_file` tool instead.
 
 ## Hard Rules
 
