@@ -1,0 +1,61 @@
+# MCP v2 Server Development Rules
+
+You are building MCP v2 servers for an enterprise OpenShift platform. Every implementation decision MUST conform to the specifications in the `spec/` directory. Do not deviate from these specs.
+
+## SDD Workflow
+
+Follow this workflow for every task:
+
+1. **Read the specs** — Before writing any code, read `spec/OVERVIEW.md`, `spec/ENVIRONMENT.md`, then the relevant spec file (ARCHITECTURE, IMPLEMENTATION, INFRASTRUCTURE, SECURITY, OBSERVABILITY, or TESTING). Do not skip this step.
+2. **Scaffold** — Copy `mcp-v2-template/` to a new directory **in the current working directory** (`$PWD`). Do not hardcode or guess absolute paths. Then `cd` into it and run `bash rename.sh <name> '<description>'`. You MUST `cd` into the new directory first — the script refuses to run otherwise. Then `rm -rf node_modules package-lock.json && npm install`. Do not manually find-and-replace — the script handles it.
+3. **Implement** — Rewrite `src/server.ts` with your tools. Write the entire file using Continue's built-in file editing — do not use the terminal for file writes. Keep all imports, helpers, Express setup, and SIGTERM handler from the template. Replace only the tool registration block.
+4. **Validate** — Run `bash validate.sh`. All checks must pass. If any fail, fix and re-run. Do not proceed until all checks pass.
+
+## File Editing Rules
+
+- **Always use Continue's built-in file editing** to create or modify source files. Never write files through the terminal.
+- **Never use heredocs** (`cat << EOF`, `cat > file << 'EOF'`) — they are garbled by terminal shell integration and will corrupt your files.
+- **Never use patch/diff formats** in the terminal — they are fragile and fail when context lines don't match.
+- **When rewriting `src/server.ts`**, replace the entire file content. Do not try to surgically edit parts of it.
+
+## Shell Rules
+
+Read `spec/ENVIRONMENT.md` before running any shell commands. Key rules:
+
+- **Never use `sed`** — use `perl -pi -e` for in-place text replacement (macOS `sed -i` is broken without `''`)
+- **Always exclude `node_modules/`, `dist/`, `.git/`, `package-lock.json`** from find, grep, and replace operations
+- **Use `npm run build`** not `npx tsc`
+- **Kill port 8080** before starting a server: `lsof -ti:8080 | xargs kill -9 2>/dev/null`
+- **Only use the terminal for**: running scripts, building, testing, starting servers, and curl commands. Never use it to write or edit files.
+
+## Hard Rules
+
+- **Zero CVEs**: `npm audit` must report 0 critical and 0 high vulnerabilities. If a dependency introduces a CVE, find an alternative or pin a safe version. Never skip this check.
+- **Approved dependencies only**: Only use packages listed in `spec/SECURITY.md`. Any unlisted dependency requires explicit user approval.
+- **Containerfile, not Dockerfile**: The container build file is always named `Containerfile`. Never create a file named `Dockerfile`.
+- **Hummingbird images only**: Use `registry.access.redhat.com/hi/nodejs:26` (runtime) and `registry.access.redhat.com/hi/nodejs:26-builder` (build). No other base images.
+- **YAML-only Kubernetes**: Plain YAML manifests in `k8s/`. No Helm charts, no Kustomize, no jsonnet.
+- **ESM only**: All TypeScript uses `"type": "module"` with `.js` extensions in imports. No CommonJS.
+- **Strict TypeScript**: `"strict": true` in tsconfig.json. No `@ts-ignore`, no `any` unless interfacing with untyped libraries.
+- **Express 5**: Use Express 5.x. Do not use Express 4.x or alternative frameworks (Fastify, Hono, Koa).
+- **MCP SDK v2**: Use `@modelcontextprotocol/server` and `@modelcontextprotocol/node`. The server is stateless — `createMcpHandler(factory)` creates a new McpServer per request.
+- **Zod 4 for schemas**: All tool input validation uses Zod 4.x. No Joi, no Yup, no manual validation.
+
+## Code Style
+
+- No comments unless the WHY is non-obvious (hidden constraint, workaround, surprising behavior).
+- No documentation files unless the user asks for them.
+- No emojis in code or output.
+- Structured JSON logging to stderr via the `log()` helper. No `console.log`.
+- Terse responses. State what you did, not what you considered.
+
+## Reference Implementation
+
+The `mcp-v2-template/` directory contains a working hello-world MCP server. When in doubt, match its patterns exactly. The template includes:
+- `rename.sh` — Renames template to your app name (run first, always)
+- `validate.sh` — Conformance validation (run last, must pass)
+- `src/server.ts` — MCP handler, Express app, tool registration
+- `src/metrics.ts` — Prometheus instrumentation
+- `Containerfile` — 3-stage build
+- `k8s/` — All Kubernetes manifests
+- `k6/load-test.js` — Load testing script
