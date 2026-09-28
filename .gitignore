@@ -1,2 +1,23 @@
 node_modules/
 dist/
+*.tgz
+
+.DS_Store
+.env
+.env.*
+
+# Test output from coding agents
+mcp-greeting/
+mcp-weather/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Continue.dev sessions
+.continue/
+
+# OpenCode state
+.opencode/
