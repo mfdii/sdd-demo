@@ -22,7 +22,9 @@ The agent follows this workflow:
 
 ## Quick Start with OpenCode + Nemotron
 
-This demo uses [OpenCode](https://opencode.ai) as the coding agent CLI paired with **NVIDIA Nemotron 3.5 Lightning 30B A3B** ([Q4_0 GGUF](https://huggingface.co/nvidia/Nemotron-3.5-Lightning-30B-A3B)) served by [llama.cpp](https://github.com/ggml-org/llama.cpp) (build 11118, Vulkan backend) on Red Hat OpenShift AI 3.5.1 / OpenShift 4.22. OpenCode is model-agnostic and connects to any OpenAI-compatible endpoint.
+This demo uses [OpenCode](https://opencode.ai) as the coding agent CLI paired with [**NVIDIA Nemotron 3.5 Lightning 30B A3B**](https://huggingface.co/ggml-org/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF) (Q4_0 GGUF, 17GB) served by [llama.cpp](https://github.com/ggml-org/llama.cpp) (build 11118, Vulkan backend) on Red Hat OpenShift AI 3.5.1 / OpenShift 4.22.
+
+OpenCode is model-agnostic and connects to any OpenAI-compatible endpoint. It also provides free access to built-in models out of the box — no API key or self-hosted infrastructure required to get started. This demo uses a self-hosted Nemotron instance, but you can use OpenCode's free tier to try the SDD workflow immediately.
 
 ### 1. Install OpenCode
 
@@ -152,7 +154,7 @@ The template includes `validate.sh` which runs 28 automated conformance checks:
 
 ## Performance: Nemotron 3.5 Lightning 30B on AMD Radeon AI PRO R9700
 
-All tests ran against a single NVIDIA Nemotron 3.5 Lightning 30B A3B (Q4_0 GGUF, 17GB) served by llama.cpp build 11118 (`ghcr.io/ggml-org/llama.cpp:server-vulkan`) on an AMD Radeon AI PRO R9700 GPU (32GB VRAM) running on Red Hat OpenShift AI 3.5.1 / OpenShift 4.22.
+All tests ran against a single [NVIDIA Nemotron 3.5 Lightning 30B A3B](https://huggingface.co/ggml-org/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF) (Q4_0 GGUF, 17GB) served by llama.cpp build 11118 (`ghcr.io/ggml-org/llama.cpp:server-vulkan`) on an AMD Radeon AI PRO R9700 GPU (32GB VRAM) running on Red Hat OpenShift AI 3.5.1 / OpenShift 4.22.
 
 ### Inference Performance
 
