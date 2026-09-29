@@ -158,10 +158,12 @@ All tests ran against a single NVIDIA Nemotron 3.5 Lightning 30B A3B (Q4_0 GGUF,
 
 | Metric | Value |
 |--------|-------|
-| Token generation throughput | **119 tokens/sec** |
-| Prompt processing throughput | **1,394 tokens/sec** |
+| Token generation throughput | **120 tokens/sec** |
+| Prompt processing throughput | **2,000 tokens/sec** |
 | Prompt cache hit rate | **96.9%** |
-| Max sequence length observed | **117,530 tokens** |
+| Total tokens generated | **66.6K** |
+| Total prompt tokens processed | **237K** |
+| Total wall-clock time (all 4 levels) | **~14 minutes** |
 
 ### Coding Agent Session Metrics
 
