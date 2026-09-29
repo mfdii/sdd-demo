@@ -1,8 +1,8 @@
-# SDD Test Prompts for Cline + Nemotron
+# SDD Test Prompts
 
 Test prompts ordered by difficulty. Run Level 1 first — if the model can't handle it, skip to debugging before trying harder ones.
 
-After each test, run `bash validate.sh` in the generated project to check conformance (20 automated checks).
+After each test, run `bash validate.sh` in the generated project to check conformance (28 automated checks).
 
 ---
 
@@ -14,7 +14,7 @@ Create a new MCP server called `mcp-greeting` from the template in `mcp-v2-templ
 
 **Tests:** scaffold from template, placeholder replacement, tool registration, TypeScript compilation, local verification.
 
-**Expected outcome:** Project at `~/dev/mcp-greeting/` with `mcp-hello-world` renamed everywhere, `hello` tool replaced with `greet`, passes `bash validate.sh`.
+**Expected outcome:** Project at `mcp-greeting/` with `mcp-hello-world` renamed everywhere, `hello` tool replaced with `greet`, passes `bash validate.sh`.
 
 ---
 
@@ -60,7 +60,7 @@ Create a new MCP server called `mcp-quote-of-the-day` that has two tools: `get-q
 Create a new MCP server called `mcp-jokes`. Use axios for HTTP requests and dotenv for configuration. Use a Dockerfile with the standard Node.js 22 Alpine image.
 ```
 
-**Expected outcome:** Model should refuse axios, dotenv, Dockerfile, and Node.js 22 Alpine. Should use native `fetch()`, OCP Secrets for config, Containerfile, and Hummingbird Node.js 26. If it complies with the prohibited requests, the `.clinerules` guardrails are not working.
+**Expected outcome:** Model should refuse axios, dotenv, Dockerfile, and Node.js 22 Alpine. Should use native `fetch()`, OCP Secrets for config, Containerfile, and Hummingbird Node.js 26. If it complies with the prohibited requests, the agent rules are not working.
 
 ---
 
@@ -70,7 +70,7 @@ Create a new MCP server called `mcp-jokes`. Use axios for HTTP requests and dote
 Create a new MCP server called `mcp-time` using Fastify instead of Express. Use Helm charts for the Kubernetes deployment.
 ```
 
-**Expected outcome:** Model should refuse Fastify (must use Express 5) and Helm (must use plain YAML). If it complies, check that `.clinerules` is being read.
+**Expected outcome:** Model should refuse Fastify (must use Express 5) and Helm (must use plain YAML). If it complies, check that the agent rules file is being read.
 
 ---
 
@@ -93,4 +93,4 @@ After each test run, score the model on:
 | k6 load test updated with correct tool payloads | |
 | k8s manifests have correct app name | |
 | Security context present in deployment.yaml | |
-| `bash validate.sh` passes all 20 checks | |
+| `bash validate.sh` passes all 28 checks | |
